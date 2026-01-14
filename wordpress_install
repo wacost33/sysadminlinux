@@ -1,0 +1,54 @@
+#!/bin/bash
+
+echo "Installation PHP"
+apt install php -y
+echo
+echo "Installation de Wordpress"
+echo
+echo "Déplacement dans le dossier Wordpress"
+cd /var/www/
+echo
+echo "Téléchargement de Wordpress"
+wget https://fr.wordpress.org/latest-fr_FR.zip
+echo
+echo "Unzip Wordpress"
+unzip -q -o latest-fr_FR.zip
+echo
+echo "Donner les permissions a www-data"
+chown -R www-data:www-data /var/www/wordpress
+echo
+echo "Suppression du ficher d'installation"
+rm -f latest-fr_FR.zip
+echo
+echo "Installer apache2"
+apt install apache2 -y
+echo
+echo "Créer un VirtualHost"
+cat > /etc/apache2/sites-available/wordpress.conf <<EOF
+<VirtualHost *:80>
+	ServerName wordpress.dylan.lan
+
+	DocumentRoot /var/www/wordpress
+</VirtualHost>
+EOF
+echo
+echo "Activation de Wordpress.conf"
+a2ensite wordpress.conf 2>/dev/nnull
+echo
+echo "Recharger apache2"
+systemctl reload apache2
+echo "Installer MariaDB"
+apt install mariadb-server -y
+echo
+echo "Création de la DB Wordpress"
+mariadb <<EOF
+CREATE DATABASE IF NOT EXISTS wordpress;
+CREATE USER IF NOT EXISTS  wordpress@localhost IDENTIFIED BY "secret";
+GRANT ALL PRIVILEGES ON wordpress.* TO wordpress@localhost;
+FLUSH PRIVILEGES;
+EOF
+echo "DB Wordpress OK"
+echo
+echo "--------------------------------------------------------------------"
+echo " Installation effectué avec succès !"
+echo "--------------------------------------------------------------------"
